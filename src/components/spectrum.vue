@@ -43,11 +43,17 @@
 export default {
   name: 'Spectrum',
   props: {
-    spectrum: {
+    starters: {
       type: Array,
       default() {
         return [];
       }
+    },
+    categories: {
+      type: Array,
+      default() {
+        return [];
+      },
     },
     chosenId: {
       type: String,
@@ -63,6 +69,22 @@ export default {
     };
   },
   computed: {
+    spectrum() {
+      return (
+        this.categories
+        // For each category, generate object with category and frags
+          .map(category => ({
+            category,
+            fragrances: this.starters
+              .filter(({ cat: fragCategory }) => category === fragCategory)
+              // Sort order of frags within cat
+              .sort(({ pizazz: a }, { pizazz: b }) => a - b),
+          }))
+          // Only show categories which have fragrances
+          .filter(category => !!category.fragrances.length)
+      );
+    },
+
   },
   methods: {
     highlight(id, cat) {
@@ -73,6 +95,7 @@ export default {
   created() {
     const {id , cat} = this.spectrum[0].fragrances[0];
     this.highlight(id, cat);
+    this.$emit('choose', id);
   }
 }
 </script>
