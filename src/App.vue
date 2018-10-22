@@ -5,45 +5,11 @@
       <h2 class="col text-center mb-5">Step 1. Choose your favorite fragrance</h2>
     </div>
 
-    <div class="spectrum row no-gutters">
-      <div
-        v-for="category in spectrum"
-        :key="category.category"
-        class="spectrum-category col text-center text-uppercase"
-      >
-        <div class="spectrum-category__images d-flex">
-          <div
-            v-for="fragrance in category.fragrances"
-            :key="fragrance.id"
-            :style="{backgroundImage: `url(${fragrance.img.spectrum})`}"
-            class="spectrum-category__image h-100"
-            :class="{highlighted: fragrance.id === highlightedId, chosen: fragrance.id === chosenId}"
-            @mouseover="highlightedId = fragrance.id"
-            @click="chosenId = fragrance.id"
-          />
-        </div>
-
-        <div
-          class="spectrum-category__category border border-secondary"
-          :class="{'highlighted-category': category.category === highlightedCat}"
-          @mouseover="highlightedId = category.fragrances[0].id"
-        >
-          {{ category.category }}
-        </div>
-
-        <ul class="spectrum-category__text list-unstyled small">
-          <li
-            v-for="fragrance in category.fragrances"
-            :key="fragrance.id"
-            :class="{highlighted: fragrance.id === highlightedId, chosen: fragrance.id === chosenId}"
-            @mouseover="highlightedId = fragrance.id"
-            @click="chosenId = fragrance.id"
-          >
-            {{ fragrance.names.short }}
-          </li>
-        </ul>
-      </div>
-    </div>
+    <spectrum
+      :spectrum="spectrum"
+      :chosenId="chosenId"
+      @choose="chosenId = $event"
+    />
 
     <div class="combiner">
       <h2 class="text-center my-3">Step 2. Choose your combination</h2>
@@ -92,18 +58,19 @@
 import { fragrances, categories } from './parse';
 
 import FragranceProduct from './components/product.vue';
+import Spectrum from './components/spectrum.vue';
 
 export default {
   name: 'VueFragranceCombining',
   components: {
     FragranceProduct,
+    Spectrum,
   },
   data() {
     return {
       fragrances,
       categories,
       companion: null,
-      highlightedId: null,
       chosenId: null,
     };
   },
@@ -126,9 +93,6 @@ export default {
           .filter(category => !!category.fragrances.length)
       );
     },
-    highlightedCat() {
-      return this.starters.find(({ id }) => id === this.highlightedId).cat;
-    },
     chosenFrag() {
       return this.starters.find(({ id }) => id === this.chosenId);
     },
@@ -145,43 +109,10 @@ export default {
     },
   },
   created() {
-    const first = this.spectrum[0].fragrances[0].id;
-    this.highlightedId = first;
-    this.chosenId = first;
+    this.chosenId = this.spectrum[0].fragrances[0].id;
   },
 };
 </script>
 
 <style lang="scss" scoped>
-@import '~bootstrap/scss/functions';
-@import '~bootstrap/scss/variables';
-@import '~bootstrap/scss/mixins';
-
-.spectrum-category__images {
-  height: 160px;
-}
-.spectrum-category__image {
-  width: 56px;
-  background: center top no-repeat;
-  background-size: 100% auto;
-}
-.spectrum-category__category {
-  background-color: theme-color(light);
-}
-.spectrum-category__image,
-.spectrum-category__text,
-.spectrum-category__category {
-  cursor: pointer;
-}
-
-// Combine for image and text since they don't affect each other
-.highlighted,
-.chosen {
-  background-position: center bottom;
-  text-decoration: underline;
-}
-.highlighted-category {
-  background-color: theme-color(dark);
-  color: theme-color(light);
-}
 </style>
