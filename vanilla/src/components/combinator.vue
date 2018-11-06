@@ -70,11 +70,14 @@
     },
     computed: {
       chosenFrag() {
-        return this.fragrances.length ? this.fragrances.find(({ id }) => id === this.chosenId) : fallbackFrag;
+        return this.fragrances.length
+          ? this.fragrances.find(({ id }) => id === this.chosenId)
+          : fallbackFrag;
       },
       companionFrag() {
-        return this.chosenFrag ? this.fragrances.find(
-          ({ id }) => this.chosenFrag.companion[this.companion] === id
+        return this.chosenFrag
+          ? this.fragrances.find(
+            ({ id }) => this.chosenFrag.companion[this.companion] === id
         ) : fallbackFrag;
       },
 
