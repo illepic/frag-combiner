@@ -2,32 +2,67 @@
  * Parse the "original" data that is in the page to extract product info
  */
 
-import * as rawData from './original-data/page_data.json';
-import * as drupalData from './original-data/drupal_settings.json';
+import * as rawPageData from './original-data/page_data.json';
+import * as rawDrupalData from './original-data/drupal_settings.json';
 
-interface rawCat {
+// Optimal app shapes
+interface IFragSku {
+  [size: string]: string;
+}
+
+// Drupal settings data
+interface IDrupalFragSetting {
+  fragrance_name: string;
+  fragrance_id: string;
+  fragrance_image: string;
+  fragrance_spectrum_image: string | null;
+  combination_warmer: string;
+  combination_fresher: string;
+  buy_button_mobile: string;
+  buy_button_desktop: string;
+}
+interface IDrupalSettings {
+  [prodId: string]: IDrupalFragSetting;
+}
+
+// jo page data
+interface ISku {
+  PRODUCT_SIZE: string;
+  formattedPrice: string;
+}
+interface IProduct {
+  PRODUCT_ID: string;
+  FRAGRANCE_FAMILY: string;
+  PROD_RGN_NAME: string;
+  skus?: ISku[];
+}
+interface ICategory {
   CATEGORY_ID: string;
+  CATEGORY_NAME: string;
+  products: IProduct[];
+  children: ICategory[];
 }
-interface joData {
-  catalog: {
-    categories: rawCat[]
-  }
+interface ICatalog {
+  categories: ICategory[];
 }
-
-if (rawData !== undefined) {
-  throw new Error('No data, yo');
+interface IJoData {
+  catalog: ICatalog;
 }
-
-const pageData = rawData as joData;
-
-// const pageData: joData = rawData || {catalog: {categories: []}};
 
 // Products in this cat show in "spectrum"
 const COMBO_CAT = 'CAT3805';
+const pageData: IJoData = rawPageData;
+const drupalData: IDrupalSettings = rawDrupalData;
 
-// Shows up top in spectrum
-export const starters = pageData.catalog.categories
-  .find(({ CATEGORY_ID }) => CATEGORY_ID === COMBO_CAT)
+// Find Frag Combiner category in page data
+const comboCat = pageData.catalog.categories
+  .find(({ CATEGORY_ID }) => CATEGORY_ID === COMBO_CAT);
+// Explode if category doesn't exist
+if (!comboCat) {
+  throw new Error('No Fragrance Combining category in page data.');
+}
+// Get starter products
+export const starters = comboCat
   .products.map(({ PRODUCT_ID }) => PRODUCT_ID);
 
 // Spectrum + warmer/fresher frags not in spectrum
@@ -64,7 +99,7 @@ const allProducts = pageData.catalog.categories.reduce((acc, cat) => {
   });
 
   return acc;
-}, []);
+}, [] as IProduct[]);
 
 export const fragrances = Object.values(drupalData).map(
   (
@@ -86,7 +121,11 @@ export const fragrances = Object.values(drupalData).map(
     // Need: skus, category
     const lookup = allProducts.find(
       ({ PRODUCT_ID: fragId }) => id === fragId,
-    ) || { FRAGRANCE_FAMILY: 'citrus' };
+    ) || {
+      FRAGRANCE_FAMILY: 'citrus',
+      PRODUCT_ID: '111111',
+      PROD_RGN_NAME: 'fallback',
+    };
 
     const cat = lookup.FRAGRANCE_FAMILY.toLowerCase();
     const long = lookup.PROD_RGN_NAME || '';
@@ -94,8 +133,8 @@ export const fragrances = Object.values(drupalData).map(
       ? lookup.skus.reduce((acc, { PRODUCT_SIZE, formattedPrice }) => {
           acc[PRODUCT_SIZE] = formattedPrice;
           return acc;
-        }, {})
-      : {};
+        }, {} as IFragSku)
+      : {} as IFragSku;
 
     return {
       id,
