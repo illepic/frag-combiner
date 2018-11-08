@@ -2,57 +2,22 @@
  * Parse the "original" data that is in the page to extract product info
  */
 
-import * as rawPageData from './original-data/page_data.json';
-import * as rawDrupalData from './original-data/drupal_settings.json';
+import * as rawPageData from '@/original-data/page-data.json';
+import * as rawDrupalData from '@/original-data/drupal-settings.json';
+
+// Types
+import { Product, JoData } from '@/original-data/page-data-types';
+import { DrupalSettings } from "@/original-data/drupal-settings-types";
 
 // Optimal app shapes
-interface IFragSku {
+interface FragSku {
   [size: string]: string;
-}
-
-// Drupal settings data
-interface IDrupalFragSetting {
-  fragrance_name: string;
-  fragrance_id: string;
-  fragrance_image: string;
-  fragrance_spectrum_image: string | null;
-  combination_warmer: string;
-  combination_fresher: string;
-  buy_button_mobile: string;
-  buy_button_desktop: string;
-}
-interface IDrupalSettings {
-  [prodId: string]: IDrupalFragSetting;
-}
-
-// jo page data
-interface ISku {
-  PRODUCT_SIZE: string;
-  formattedPrice: string;
-}
-interface IProduct {
-  PRODUCT_ID: string;
-  FRAGRANCE_FAMILY: string;
-  PROD_RGN_NAME: string;
-  skus?: ISku[];
-}
-interface ICategory {
-  CATEGORY_ID: string;
-  CATEGORY_NAME: string;
-  products: IProduct[];
-  children: ICategory[];
-}
-interface ICatalog {
-  categories: ICategory[];
-}
-interface IJoData {
-  catalog: ICatalog;
 }
 
 // Products in this cat show in "spectrum"
 const COMBO_CAT = 'CAT3805';
-const pageData: IJoData = rawPageData;
-const drupalData: IDrupalSettings = rawDrupalData;
+const pageData: JoData = rawPageData;
+const drupalData: DrupalSettings = rawDrupalData;
 
 // Find Frag Combiner category in page data
 const comboCat = pageData.catalog.categories
@@ -99,7 +64,7 @@ const allProducts = pageData.catalog.categories.reduce((acc, cat) => {
   });
 
   return acc;
-}, [] as IProduct[]);
+}, [] as Product[]);
 
 export const fragrances = Object.values(drupalData).map(
   (
@@ -113,7 +78,7 @@ export const fragrances = Object.values(drupalData).map(
       buy_button_desktop: strBuyDesktop,
       buy_button_mobile: strBuyMobile,
     },
-    index,
+    pizazz,
   ) => {
     // Discover if a starter
     const isStarter = starters.some((starterId) => id === starterId);
@@ -133,8 +98,8 @@ export const fragrances = Object.values(drupalData).map(
       ? lookup.skus.reduce((acc, { PRODUCT_SIZE, formattedPrice }) => {
           acc[PRODUCT_SIZE] = formattedPrice;
           return acc;
-        }, {} as IFragSku)
-      : {} as IFragSku;
+        }, {} as FragSku)
+      : {} as FragSku;
 
     return {
       id,
@@ -143,7 +108,7 @@ export const fragrances = Object.values(drupalData).map(
         long,
       },
       cat,
-      pizazz: index,
+      pizazz,
       img: {
         combiner,
         spectrum,
