@@ -32,7 +32,7 @@ export const starters = comboCat
 
 // Spectrum + warmer/fresher frags not in spectrum
 export const combiners = Object.values(drupalData).map(
-  ({ fragrance_id: id }) => id,
+  ({ fragrance_id }) => fragrance_id
 );
 
 // Quick list of cats, lowercase
